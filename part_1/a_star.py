@@ -15,12 +15,12 @@ black = (0, 0, 0)
 
 class Node:
 
-    def __init__(self, i, j, endI, endJ, theta):
-        self.i = i
-        self.j = j
+    def __init__(self, x, y, endX, endY, theta):
+        self.i = x
+        self.j = y
         self.theta = theta
         self.costToCome = 0.0
-        self.costToGo = 2.5*(math.sqrt((i - endI) ** 2 + (j - endJ) ** 2))
+        self.costToGo = 2.5*(math.sqrt((x - endX) ** 2 + (y - endY) ** 2))
         self.cost = None
         self.neighbours = {}
         self.valid_actions = {}
@@ -34,8 +34,8 @@ class Graph:
 
     def __init__(self, start, end, RPM1, RPM2, radius, cl):
         self.visited = {}
-        self.endI = end.i
-        self.endJ = end.j
+        self.endX = end.i
+        self.endY = end.j
         self.RPM1 = RPM1
         self.RPM2 = RPM2
         self.radius = radius
@@ -50,8 +50,8 @@ class Graph:
         UL = 3.14*UL/30
         UR = 3.14*UR/30
 
-        newI = i
-        newJ = j
+        newX = i
+        newY = j
         newTheta = 3.14 * theta/180
         D = 0
 
@@ -59,8 +59,8 @@ class Graph:
             t = t + dt
             Delta_Xn = 0.5 * r * (UL + UR) * math.cos(newTheta) * dt
             Delta_Yn = 0.5 * r * (UL + UR) * math.sin(newTheta) * dt
-            newI += Delta_Xn
-            newJ += Delta_Yn
+            newX += Delta_Xn
+            newY += Delta_Yn
             newTheta += (r / L) * (UR - UL) * dt
             D = D + math.sqrt(math.pow(Delta_Xn, 2) + math.pow(Delta_Yn, 2))
         newTheta = 180*newTheta/3.14
@@ -70,10 +70,10 @@ class Graph:
         elif newTheta < 0:
             newTheta = (newTheta + 360) % 360
 
-        newI = self.round_num(newI)
-        newJ = self.round_num(newJ)
+        newX = self.round_num(newX)
+        newY = self.round_num(newY)
 
-        return newI, newJ, newTheta, D
+        return newX, newY, newTheta, D
     def neighbours(self, currentNode):
         i, j, theta = currentNode.i, currentNode.j, currentNode.theta
         neighbours = {}
@@ -82,32 +82,32 @@ class Graph:
         for UL, UR in actions:
             x, y, newTheta, distance = self.new_coords(i, j, theta, UL, UR)
             if (not self.isOutsideArena(x, y)) and (not self.isAnObstacle(x, y)):
-                newNode = Node(x, y, self.endI, self.endJ, newTheta)
+                newNode = Node(x, y, self.endX, self.endY, newTheta)
                 neighbours[newNode] = distance
                 valid_actions[newNode] = [UL, UR]
         return neighbours, valid_actions
 
     
 
-    def draw_action(self, i, j, theta, UL, UR, color):
+    def drawActionSet(self, x, y, theta, UL, UR, color):
         t = 0
         r = 0.22
         L = 0.287
         dt = 0.1
 
-        newI = i
-        newJ = j
+        newX = x
+        newY = y
         newTheta = 3.14*theta/180
         UL = 3.14*UL/30
         UR = 3.14*UR/30
 
         while t < 1:
             t = t + dt
-            oldI = newI
-            oldJ = newJ
-            newI += 0.5 * r * (UL + UR) * math.cos(newTheta) * dt
-            newJ += 0.5 * r * (UL + UR) * math.sin(newTheta) * dt
-            pygame.draw.line(gridDisplay, color, [int(50*oldI), int(h - 50*oldJ)], [int(50*newI), int(h - 50*newJ)], 2)
+            oldX = newX
+            oldY = newY
+            newX += 0.5 * r * (UL + UR) * math.cos(newTheta) * dt
+            newY += 0.5 * r * (UL + UR) * math.sin(newTheta) * dt
+            pygame.draw.line(gridDisplay, color, [int(50*oldX), int(h - 50*oldY)], [int(50*newX), int(h - 50*newY)], 2)
             newTheta += (r / L) * (UR - UL) * dt
         pygame.display.update()
         time.sleep(0.1)
@@ -122,7 +122,7 @@ class Graph:
         i = i/50
         return i
 
-    def generateGraph(self, ):
+    def generateGraph(self):
         gridDisplay.fill(white)
         pygame.draw.circle(gridDisplay, black, [100, int(h - 100)], 50)
         pygame.draw.circle(gridDisplay, black, [100, int(h - 400)], 50)
@@ -132,14 +132,14 @@ class Graph:
 
     def performAStar(self, start, end):
         if self.isAnObstacle(start.i, start.j) and self.isAnObstacle(end.i, end.j):
-            print("Starting and ending point are inside the obstacle!")
+            print("Starting and endXng point are inside the obstacle!")
             return
 
         if self.isAnObstacle(start.i, start.j):
             print("Starting point is inside the obstacle!")
             return
         if self.isAnObstacle(end.i, end.j):
-            print("Ending point is inside the obstacle!")
+            print("EndXng point is inside the obstacle!")
             return
 
         if self.isOutsideArena(start.i, start.j):
@@ -147,7 +147,7 @@ class Graph:
             return
 
         if self.isOutsideArena(end.i, end.j):
-            print("Ending point is outside the arena!")
+            print("EndXng point is outside the arena!")
             return
 
         print("Started A-star algorithm")
@@ -178,7 +178,7 @@ class Graph:
         print("No path found")
         return False
 
-    def visualizeAStar(self, start, end):
+    def visualize(self, start, end):
 
         visited_list = {}
         priorityQueue = []
@@ -201,7 +201,7 @@ class Graph:
             visited_list[tuple([currentNode.i, currentNode.j])] = True
 
             for neighbourNode, action in currentNode.valid_actions.items():
-                self.draw_action(currentNode.i,currentNode.j,currentNode.theta,action[0],action[1],red)
+                self.drawActionSet(currentNode.i,currentNode.j,currentNode.theta,action[0],action[1],red)
 
             for neighbourNode, newDistance in currentNode.neighbours.items():
                 heapq.heappush(priorityQueue, (neighbourNode.cost, neighbourNode))
@@ -210,7 +210,7 @@ class Graph:
 
     def isInTargetArea(self, i, j):
   
-        if (i - self.endI) ** 2 + (j - self.endJ) ** 2 - 0.01 <= 0:
+        if (i - self.endX) ** 2 + (j - self.endY) ** 2 - 0.01 <= 0:
             return True
         else:
             return False
@@ -293,7 +293,7 @@ if robot.performAStar(start, end):
     grid = [[0 for j in range(h)] for i in range(w)]
     canvas = Graph(start, end, RPM1, RPM2, radius, cl)
     canvas.generateGraph()
-    robot.visualizeAStar(start, end)
+    robot.visualize(start, end)
     path.reverse()
 else:
     # No Path Found
@@ -308,7 +308,7 @@ while not exiting:
     for index in range(len(path)-1):
         node = path[index]
         action = node.valid_actions[path[index+1]]
-        robot.draw_action(node.i, node.j, node.theta, action[0], action[1], black)
+        robot.drawActionSet(node.i, node.j, node.theta, action[0], action[1], black)
 
 
     clock.tick(2000)
